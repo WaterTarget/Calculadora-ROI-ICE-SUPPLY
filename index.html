@@ -692,7 +692,19 @@
 
         function updateInput(id, key, value) {
             const model = models.find(m => m.id === id);
-            model.inputs[key] = parseFloat(value.replace(/,/g, '')) || 0;
+            let parsedVal = parseFloat(value.replace(/,/g, '')) || 0;
+
+            if (key === 'loads_m') {
+                const maxVal = MACHINES[model.machineId].loads_m;
+                if (parsedVal > maxVal) {
+                    parsedVal = maxVal;
+                    // Update input field to show the capped value
+                    const inputEl = document.getElementById(`input-${id}-${key}`);
+                    if (inputEl) inputEl.value = fmtWithCommas(parsedVal);
+                }
+            }
+
+            model.inputs[key] = parsedVal;
 
             if (key === 'loads_m') {
                 let recalculado = false;
@@ -742,7 +754,7 @@
                 for (const [key, value] of Object.entries(model.inputs)) {
                     if (key === 'name' || key.endsWith('_bag') || key === 'renta') continue;
                     const valDisplay = fmtWithCommas(value);
-                    const readonlyAttr = key === 'loads_m' ? 'readonly style="background: var(--surface-light); color: var(--text-muted); cursor: not-allowed;"' : '';
+                    const readonlyAttr = ''; // loads_m is no longer readonly
                     inputsHTML += `
                         <div class="form-group">
                             <label class="form-label">${LABELS[key] || key}</label>
